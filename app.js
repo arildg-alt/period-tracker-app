@@ -4,6 +4,7 @@
 const STORAGE_KEY = 'periodTrackerEntriesV1';
 const DEFAULT_CYCLE_LENGTH = 28;
 const DEFAULT_PERIOD_LENGTH = 5;
+const APP_BUILD_VERSION = 'v2';
 
 const formMessage = document.getElementById('form-message');
 const dataMessage = document.getElementById('data-message');
@@ -39,6 +40,7 @@ let draftEndDate = '';
 currentMonthDate.setDate(1);
 
 renderAll();
+showBuildVersion();
 registerServiceWorker();
 
 exportBtn.addEventListener('click', exportData);
@@ -140,6 +142,13 @@ cancelRangeBtn.addEventListener('click', () => {
   renderCalendar();
   showMessage(formMessage, 'Selection cleared.', false);
 });
+
+function showBuildVersion() {
+  const buildSubtitle = document.getElementById('build-subtitle');
+  if (buildSubtitle) {
+    buildSubtitle.textContent = `${buildSubtitle.textContent} • Build ${APP_BUILD_VERSION}`;
+  }
+}
 
 function renderAll() {
   renderHistory();
