@@ -6,8 +6,11 @@
   --text: #2f1f29;
   --muted: #6c5a64;
   --danger: #b02046;
-  --highlight: #ffdce8;
   --border: #f0c9d5;
+  --period: #ffdce8;
+  --predicted: #ffeebf;
+  --fertile: #d7f7e3;
+  --ovulation: #8ae1ac;
 }
 
 * {
@@ -16,7 +19,7 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.4;
@@ -52,44 +55,38 @@ h1 {
   box-shadow: 0 6px 18px rgba(185, 110, 134, 0.1);
 }
 
-h2 {
+h2,
+h3 {
   margin-top: 0;
+}
+
+h2 {
   font-size: 1.2rem;
 }
 
-label {
-  display: block;
-  margin-top: 0.7rem;
-  margin-bottom: 0.3rem;
-  font-weight: 600;
+h3 {
+  font-size: 1rem;
 }
 
 input,
-textarea,
 button {
   width: 100%;
   font-size: 1rem;
-  border-radius: 10px;
-}
-
-input,
-textarea {
-  border: 1px solid #d6c0c8;
-  padding: 0.8rem;
-  background: #fff;
+  border-radius: 12px;
 }
 
 button {
   border: none;
-  padding: 0.9rem;
-  margin-top: 0.9rem;
+  padding: 0.95rem;
+  margin-top: 0.7rem;
   font-weight: 700;
 }
 
 .primary-btn,
 .secondary-btn,
 .danger-btn,
-.file-label {
+.file-label,
+.day-cell {
   min-height: 48px;
 }
 
@@ -117,7 +114,7 @@ button {
   align-items: center;
   justify-content: center;
   background: #f9deea;
-  border-radius: 10px;
+  border-radius: 12px;
   margin-top: 0.9rem;
   font-weight: 700;
   cursor: pointer;
@@ -129,7 +126,7 @@ button {
 
 .calendar-controls {
   display: grid;
-  grid-template-columns: 48px 1fr 48px;
+  grid-template-columns: 52px 1fr 52px;
   align-items: center;
   gap: 0.4rem;
 }
@@ -139,39 +136,121 @@ button {
   margin: 0;
 }
 
+.icon-btn {
+  margin-top: 0;
+}
+
 .calendar-grid {
   margin-top: 0.8rem;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 0.3rem;
+  gap: 0.35rem;
 }
 
 .day-name,
 .day-cell {
   text-align: center;
-  padding: 0.5rem 0.2rem;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.9rem;
 }
 
 .day-name {
   font-weight: 700;
   color: var(--muted);
+  padding: 0.5rem 0.2rem;
 }
 
 .day-cell {
   border: 1px solid #ecd5dd;
-  min-height: 40px;
+  background: #fff;
+  font-weight: 600;
+}
+
+.day-cell:active {
+  transform: scale(0.98);
 }
 
 .period-day {
-  background: var(--highlight);
-  border-color: #e6a8be;
-  font-weight: 700;
+  background: var(--period);
+}
+
+.predicted-day {
+  box-shadow: inset 0 0 0 3px var(--predicted);
+}
+
+.fertile-day {
+  box-shadow: inset 0 0 0 3px var(--fertile);
+}
+
+.ovulation-day {
+  background: var(--ovulation);
 }
 
 .today {
   outline: 2px solid var(--primary);
+}
+
+.selected-day {
+  border: 2px solid #4b2030;
+}
+
+.draft-day {
+  box-shadow: inset 0 0 0 2px #7f4e60;
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+}
+
+.legend p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  font-size: 0.86rem;
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  margin-right: 0.4rem;
+  border: 1px solid #ccb6be;
+}
+
+.swatch-period {
+  background: var(--period);
+}
+
+.swatch-predicted {
+  background: var(--predicted);
+}
+
+.swatch-fertile {
+  background: var(--fertile);
+}
+
+.swatch-ovulation {
+  background: var(--ovulation);
+}
+
+.swatch-today {
+  background: #fff;
+  border: 2px solid var(--primary);
+}
+
+.quick-entry {
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px dashed #eac4d1;
+}
+
+.button-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
 }
 
 .history-list {
@@ -212,6 +291,17 @@ button {
   border: 1px dashed #ebb5c7;
   padding: 0.7rem;
   border-radius: 10px;
+}
+
+.warning {
+  background: #fff5e9;
+  border-color: #efcf94;
+}
+
+@media (max-width: 520px) {
+  .legend {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (min-width: 760px) {
