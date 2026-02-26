@@ -1,17 +1,22 @@
 // Private Period Tracker
-// This app stores everything in localStorage on this device only.
+// Local-only storage, no accounts, works offline.
 
 const STORAGE_KEY = 'periodTrackerEntriesV1';
+const DEFAULT_CYCLE_LENGTH = 28;
+const DEFAULT_PERIOD_LENGTH = 5;
 
-const form = document.getElementById('period-form');
-const startDateInput = document.getElementById('start-date');
-const endDateInput = document.getElementById('end-date');
-const notesInput = document.getElementById('notes');
 const formMessage = document.getElementById('form-message');
 const dataMessage = document.getElementById('data-message');
 const historyList = document.getElementById('history-list');
 const avgCycle = document.getElementById('avg-cycle');
+const avgPeriod = document.getElementById('avg-period');
 const nextPeriod = document.getElementById('next-period');
+const predictionConfidence = document.getElementById('prediction-confidence');
+const irregularWarning = document.getElementById('irregular-warning');
+const predictionWindow = document.getElementById('prediction-window');
+const ovulationDate = document.getElementById('ovulation-date');
+const fertileWindow = document.getElementById('fertile-window');
+const onboardingMessage = document.getElementById('onboarding-message');
 const exportBtn = document.getElementById('export-btn');
 const importFileInput = document.getElementById('import-file');
 const deleteBtn = document.getElementById('delete-btn');
@@ -19,48 +24,22 @@ const calendarGrid = document.getElementById('calendar-grid');
 const calendarTitle = document.getElementById('calendar-title');
 const prevMonthBtn = document.getElementById('prev-month');
 const nextMonthBtn = document.getElementById('next-month');
+const selectedDateText = document.getElementById('selected-date-text');
+const setStartBtn = document.getElementById('set-start-btn');
+const setEndBtn = document.getElementById('set-end-btn');
+const saveRangeBtn = document.getElementById('save-range-btn');
+const cancelRangeBtn = document.getElementById('cancel-range-btn');
+const rangePreview = document.getElementById('range-preview');
 
 let entries = loadEntries();
 let currentMonthDate = new Date();
+let selectedDateKey = '';
+let draftStartDate = '';
+let draftEndDate = '';
 currentMonthDate.setDate(1);
 
 renderAll();
 registerServiceWorker();
-
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
-  clearMessage(formMessage);
-
-  const startDate = startDateInput.value;
-  const endDate = endDateInput.value;
-  const notes = notesInput.value.trim();
-
-  if (!startDate || !endDate) {
-    showMessage(formMessage, 'Please select both start and end dates.', true);
-    return;
-  }
-
-  if (new Date(endDate) < new Date(startDate)) {
-    showMessage(formMessage, 'End date cannot be before start date.', true);
-    return;
-  }
-
-  const newEntry = {
-    id: crypto.randomUUID(),
-    startDate,
-    endDate,
-    notes,
-    createdAt: new Date().toISOString()
-  };
-
-  entries.push(newEntry);
-  entries.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-  saveEntries();
-  renderAll();
-
-  form.reset();
-  showMessage(formMessage, 'Entry saved.', false);
-});
 
 exportBtn.addEventListener('click', exportData);
 importFileInput.addEventListener('change', importData);
@@ -73,6 +52,7 @@ deleteBtn.addEventListener('click', () => {
   }
 
   entries = [];
+  resetDraftSelection();
   saveEntries();
   renderAll();
   showMessage(dataMessage, 'All data deleted.', false);
@@ -88,9 +68,83 @@ nextMonthBtn.addEventListener('click', () => {
   renderCalendar();
 });
 
+setStartBtn.addEventListener('click', () => {
+  clearMessage(formMessage);
+  if (!selectedDateKey) {
+    showMessage(formMessage, 'Tap a date first.', true);
+    return;
+  }
+
+  draftStartDate = selectedDateKey;
+  if (draftEndDate && new Date(draftEndDate) < new Date(draftStartDate)) {
+    draftEndDate = '';
+  }
+
+  renderDraftSelection();
+});
+
+setEndBtn.addEventListener('click', () => {
+  clearMessage(formMessage);
+  if (!selectedDateKey) {
+    showMessage(formMessage, 'Tap a date first.', true);
+    return;
+  }
+
+  if (!draftStartDate) {
+    showMessage(formMessage, 'Set a period start date first.', true);
+    return;
+  }
+
+  if (new Date(selectedDateKey) < new Date(draftStartDate)) {
+    showMessage(formMessage, 'End date cannot be before start date.', true);
+    return;
+  }
+
+  draftEndDate = selectedDateKey;
+  renderDraftSelection();
+});
+
+saveRangeBtn.addEventListener('click', () => {
+  clearMessage(formMessage);
+
+  if (!draftStartDate || !draftEndDate) {
+    showMessage(formMessage, 'Choose both a start and end date.', true);
+    return;
+  }
+
+  const existingIndex = entries.findIndex((entry) => entry.startDate === draftStartDate);
+  const entryToSave = {
+    id: existingIndex >= 0 ? entries[existingIndex].id : crypto.randomUUID(),
+    startDate: draftStartDate,
+    endDate: draftEndDate,
+    notes: '',
+    createdAt: existingIndex >= 0 ? entries[existingIndex].createdAt : new Date().toISOString()
+  };
+
+  if (existingIndex >= 0) {
+    entries[existingIndex] = entryToSave;
+  } else {
+    entries.push(entryToSave);
+  }
+
+  entries.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+  saveEntries();
+  resetDraftSelection();
+  renderAll();
+  showMessage(formMessage, 'Period range saved.', false);
+});
+
+cancelRangeBtn.addEventListener('click', () => {
+  resetDraftSelection();
+  renderDraftSelection();
+  renderCalendar();
+  showMessage(formMessage, 'Selection cleared.', false);
+});
+
 function renderAll() {
   renderHistory();
   renderSummary();
+  renderDraftSelection();
   renderCalendar();
 }
 
@@ -98,40 +152,70 @@ function renderHistory() {
   historyList.innerHTML = '';
 
   if (entries.length === 0) {
-    historyList.innerHTML = '<li>No entries yet.</li>';
+    historyList.innerHTML = '<li>No logged periods yet.</li>';
     return;
   }
 
-  // Show newest first in history.
   [...entries]
     .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
     .forEach((entry) => {
       const item = document.createElement('li');
       item.className = 'history-item';
-      item.innerHTML = `
-        <p><strong>${formatDate(entry.startDate)}</strong> to <strong>${formatDate(entry.endDate)}</strong></p>
-        <p>${entry.notes ? escapeHtml(entry.notes) : '<em>No notes</em>'}</p>
-      `;
+      item.innerHTML = `<p><strong>${formatDate(entry.startDate)}</strong> to <strong>${formatDate(
+        entry.endDate
+      )}</strong></p>`;
       historyList.appendChild(item);
     });
 }
 
 function renderSummary() {
-  const cycleLengths = getCycleLengths();
+  const metrics = calculatePredictionMetrics();
 
-  if (cycleLengths.length === 0) {
-    avgCycle.textContent = 'Not enough data';
-    nextPeriod.textContent = 'Not enough data';
+  avgCycle.textContent = `${metrics.averageCycleLength} days${metrics.usingDefaults ? ' (general estimate)' : ''}`;
+  avgPeriod.textContent = `${metrics.averagePeriodLength} days${metrics.usingDefaults ? ' (general estimate)' : ''}`;
+  nextPeriod.textContent = `${formatDate(metrics.predictedNextPeriod)}${metrics.usingDefaults ? ' (general estimate)' : ''}`;
+  predictionConfidence.textContent = metrics.confidenceText;
+
+  irregularWarning.textContent = metrics.irregularMessage;
+  predictionWindow.textContent = `${formatDate(metrics.windowStart)} to ${formatDate(metrics.windowEnd)}`;
+  ovulationDate.textContent = formatDate(metrics.ovulation);
+  fertileWindow.textContent = `${formatDate(metrics.fertileStart)} to ${formatDate(metrics.fertileEnd)}`;
+
+  if (entries.length === 0) {
+    onboardingMessage.textContent =
+      'Welcome. Tap a date in the calendar, set a period start and end, then save. Until then, we show general estimates: 28-day cycle and 5-day period.';
+  } else if (entries.length === 1) {
+    onboardingMessage.textContent =
+      'You have one period logged. Predictions are using general estimates (28-day cycle, 5-day period) until more history is available.';
+  } else if (metrics.usingDefaults) {
+    onboardingMessage.textContent =
+      'Using a blend of your data and general estimates. Add more period entries to improve prediction quality.';
+  } else {
+    onboardingMessage.textContent = 'Predictions now use your own cycle history.';
+  }
+}
+
+function renderDraftSelection() {
+  selectedDateText.textContent = selectedDateKey
+    ? `Selected date: ${formatDate(selectedDateKey)}`
+    : 'No date selected yet.';
+
+  if (!draftStartDate && !draftEndDate) {
+    rangePreview.textContent = 'No range selected.';
+    rangePreview.classList.remove('error', 'success');
     return;
   }
 
-  const average = Math.round(cycleLengths.reduce((sum, value) => sum + value, 0) / cycleLengths.length);
-  avgCycle.textContent = `${average} days`;
+  if (draftStartDate && !draftEndDate) {
+    rangePreview.textContent = `Start selected: ${formatDate(draftStartDate)}. Now set the end date.`;
+    rangePreview.classList.remove('error');
+    rangePreview.classList.add('success');
+    return;
+  }
 
-  const lastEntry = entries[entries.length - 1];
-  const estimatedNext = new Date(lastEntry.startDate);
-  estimatedNext.setDate(estimatedNext.getDate() + average);
-  nextPeriod.textContent = formatDate(estimatedNext.toISOString().slice(0, 10));
+  rangePreview.textContent = `Ready to save: ${formatDate(draftStartDate)} to ${formatDate(draftEndDate)}.`;
+  rangePreview.classList.remove('error');
+  rangePreview.classList.add('success');
 }
 
 function renderCalendar() {
@@ -149,6 +233,12 @@ function renderCalendar() {
     calendarGrid.appendChild(dayHeader);
   });
 
+  const metrics = calculatePredictionMetrics();
+  const periodDays = new Set(getAllPeriodDays());
+  const predictedPeriodDays = getDateRangeSet(metrics.predictedNextPeriod, addDays(metrics.predictedNextPeriod, metrics.averagePeriodLength - 1));
+  const fertileDays = getDateRangeSet(metrics.fertileStart, metrics.fertileEnd);
+  const ovulationDayKey = metrics.ovulation;
+
   const year = currentMonthDate.getFullYear();
   const month = currentMonthDate.getMonth();
   const firstDay = new Date(year, month, 1);
@@ -159,26 +249,102 @@ function renderCalendar() {
     calendarGrid.appendChild(spacer);
   }
 
-  const periodDays = new Set(getAllPeriodDays());
-
   for (let day = 1; day <= daysInMonth; day += 1) {
     const date = new Date(year, month, day);
     const dateKey = toDateKey(date);
 
-    const cell = document.createElement('div');
+    const cell = document.createElement('button');
+    cell.type = 'button';
     cell.className = 'day-cell';
     cell.textContent = String(day);
+    cell.setAttribute('aria-label', formatDate(dateKey));
 
     if (periodDays.has(dateKey)) {
       cell.classList.add('period-day');
+    }
+
+    if (predictedPeriodDays.has(dateKey)) {
+      cell.classList.add('predicted-day');
+    }
+
+    if (fertileDays.has(dateKey)) {
+      cell.classList.add('fertile-day');
+    }
+
+    if (dateKey === ovulationDayKey) {
+      cell.classList.add('ovulation-day');
     }
 
     if (isSameDate(date, new Date())) {
       cell.classList.add('today');
     }
 
+    if (dateKey === selectedDateKey) {
+      cell.classList.add('selected-day');
+    }
+
+    if (isDateWithinDraft(dateKey)) {
+      cell.classList.add('draft-day');
+    }
+
+    cell.addEventListener('click', () => {
+      selectedDateKey = dateKey;
+      clearMessage(formMessage);
+      renderDraftSelection();
+      renderCalendar();
+    });
+
     calendarGrid.appendChild(cell);
   }
+}
+
+function calculatePredictionMetrics() {
+  const cycleLengths = getCycleLengths();
+  const periodLengths = getPeriodLengths();
+  const todayKey = toDateKey(new Date());
+
+  const hasNoData = entries.length === 0;
+  const oneEntry = entries.length === 1;
+
+  const averageCycleLength =
+    cycleLengths.length > 0 ? Math.round(cycleLengths.reduce((sum, value) => sum + value, 0) / cycleLengths.length) : DEFAULT_CYCLE_LENGTH;
+  const averagePeriodLength =
+    periodLengths.length > 0 ? Math.round(periodLengths.reduce((sum, value) => sum + value, 0) / periodLengths.length) : DEFAULT_PERIOD_LENGTH;
+
+  const lastStart = entries.length > 0 ? entries[entries.length - 1].startDate : todayKey;
+  const predictedNextPeriod = addDays(lastStart, averageCycleLength);
+
+  const variance = getStandardDeviation(cycleLengths);
+  const usingDefaults = hasNoData || oneEntry || cycleLengths.length === 0 || periodLengths.length === 0;
+
+  let confidenceText = 'High';
+  if (usingDefaults || cycleLengths.length < 2) {
+    confidenceText = 'Low';
+  } else if (variance > 3 || cycleLengths.length < 4) {
+    confidenceText = 'Medium';
+  }
+
+  const irregular = cycleLengths.length >= 2 && variance >= 4;
+  const windowRadius = usingDefaults ? 4 : irregular ? 5 : 2;
+
+  return {
+    averageCycleLength,
+    averagePeriodLength,
+    predictedNextPeriod,
+    windowStart: addDays(predictedNextPeriod, -windowRadius),
+    windowEnd: addDays(predictedNextPeriod, windowRadius),
+    ovulation: addDays(predictedNextPeriod, -14),
+    fertileStart: addDays(predictedNextPeriod, -19),
+    fertileEnd: addDays(predictedNextPeriod, -13),
+    irregularMessage:
+      cycleLengths.length < 2
+        ? 'Need at least 2 cycle gaps to assess regularity.'
+        : irregular
+          ? 'Your cycle looks irregular. Prediction window is wider than usual.'
+          : 'Your cycle pattern looks fairly regular.',
+    confidenceText,
+    usingDefaults
+  };
 }
 
 function getAllPeriodDays() {
@@ -215,6 +381,17 @@ function getCycleLengths() {
   }
 
   return lengths;
+}
+
+function getPeriodLengths() {
+  return entries
+    .map((entry) => {
+      const start = new Date(entry.startDate);
+      const end = new Date(entry.endDate);
+      const diff = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      return diff > 0 ? diff : null;
+    })
+    .filter((value) => value !== null);
 }
 
 function exportData() {
@@ -274,6 +451,7 @@ function importData(event) {
 
       entries = sanitized.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
       saveEntries();
+      resetDraftSelection();
       renderAll();
       showMessage(dataMessage, 'Data imported successfully.', false);
     } catch (error) {
@@ -294,7 +472,20 @@ function loadEntries() {
     }
 
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed
+      .filter((entry) => entry.startDate && entry.endDate)
+      .map((entry) => ({
+        id: entry.id || crypto.randomUUID(),
+        startDate: entry.startDate,
+        endDate: entry.endDate,
+        notes: typeof entry.notes === 'string' ? entry.notes : '',
+        createdAt: entry.createdAt || new Date().toISOString()
+      }))
+      .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
   } catch {
     return [];
   }
@@ -302,6 +493,50 @@ function loadEntries() {
 
 function saveEntries() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+
+function resetDraftSelection() {
+  selectedDateKey = '';
+  draftStartDate = '';
+  draftEndDate = '';
+}
+
+function isDateWithinDraft(dateKey) {
+  if (!draftStartDate || !draftEndDate) {
+    return false;
+  }
+
+  return new Date(dateKey) >= new Date(draftStartDate) && new Date(dateKey) <= new Date(draftEndDate);
+}
+
+function addDays(dateKey, dayCount) {
+  const date = new Date(dateKey);
+  date.setDate(date.getDate() + dayCount);
+  return toDateKey(date);
+}
+
+function getDateRangeSet(startDateKey, endDateKey) {
+  const dates = new Set();
+  let cursor = new Date(startDateKey);
+  const end = new Date(endDateKey);
+
+  while (cursor <= end) {
+    dates.add(toDateKey(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return dates;
+}
+
+function getStandardDeviation(values) {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const squareDiffs = values.map((value) => (value - average) ** 2);
+  const variance = squareDiffs.reduce((sum, value) => sum + value, 0) / values.length;
+  return Math.sqrt(variance);
 }
 
 function formatDate(dateString) {
@@ -322,15 +557,6 @@ function isSameDate(a, b) {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
   );
-}
-
-function escapeHtml(text) {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
 }
 
 function showMessage(target, text, isError) {

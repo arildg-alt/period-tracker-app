@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f2849e" />
-    <meta name="description" content="A simple private period tracker that works offline." />
+    <meta name="description" content="A simple private period prediction tracker that works offline." />
     <link rel="manifest" href="manifest.json" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="apple-touch-icon" href="icon.svg" />
@@ -13,52 +13,60 @@
   <body>
     <header class="app-header">
       <h1>Private Period Tracker</h1>
-      <p class="subtitle">Stored on this device only</p>
+      <p class="subtitle">Prediction-focused. Stored on this iPhone only.</p>
     </header>
 
     <main class="container">
       <section class="card">
-        <h2>Add Period Entry</h2>
-        <form id="period-form" novalidate>
-          <label for="start-date">Start date</label>
-          <input id="start-date" name="startDate" type="date" required />
-
-          <label for="end-date">End date</label>
-          <input id="end-date" name="endDate" type="date" required />
-
-          <label for="notes">Notes / symptoms (optional)</label>
-          <textarea
-            id="notes"
-            name="notes"
-            rows="3"
-            placeholder="Example: cramps, fatigue, mood changes"
-          ></textarea>
-
-          <button type="submit" class="primary-btn">Save Entry</button>
-          <p id="form-message" class="message" aria-live="polite"></p>
-        </form>
-      </section>
-
-      <section class="card">
-        <h2>Cycle Summary</h2>
-        <p><strong>Average cycle length:</strong> <span id="avg-cycle">Not enough data</span></p>
-        <p><strong>Estimated next period start:</strong> <span id="next-period">Not enough data</span></p>
-        <p class="disclaimer">
-          Predictions are simple estimates based on your history and are <strong>not medical advice</strong>
-          and <strong>not contraception</strong>.
-        </p>
-      </section>
-
-      <section class="card">
-        <h2>Calendar View</h2>
+        <h2>Calendar</h2>
         <div class="calendar-controls">
-          <button id="prev-month" class="secondary-btn" type="button" aria-label="Previous month">
+          <button id="prev-month" class="secondary-btn icon-btn" type="button" aria-label="Previous month">
             ◀
           </button>
           <h3 id="calendar-title"></h3>
-          <button id="next-month" class="secondary-btn" type="button" aria-label="Next month">▶</button>
+          <button id="next-month" class="secondary-btn icon-btn" type="button" aria-label="Next month">▶</button>
         </div>
         <div id="calendar-grid" class="calendar-grid" aria-live="polite"></div>
+
+        <div class="legend">
+          <p><span class="swatch swatch-period"></span> Logged period</p>
+          <p><span class="swatch swatch-predicted"></span> Predicted next period</p>
+          <p><span class="swatch swatch-fertile"></span> Fertile window</p>
+          <p><span class="swatch swatch-ovulation"></span> Ovulation day</p>
+          <p><span class="swatch swatch-today"></span> Today</p>
+        </div>
+
+        <div class="quick-entry">
+          <h3>Tap a date to enter or edit period dates</h3>
+          <p id="selected-date-text">No date selected yet.</p>
+          <div class="button-row">
+            <button id="set-start-btn" type="button" class="secondary-btn">Set as period start</button>
+            <button id="set-end-btn" type="button" class="secondary-btn">Set as period end</button>
+          </div>
+          <button id="save-range-btn" type="button" class="primary-btn">Save Period Range</button>
+          <button id="cancel-range-btn" type="button" class="secondary-btn">Cancel Selection</button>
+          <p id="range-preview" class="message"></p>
+          <p id="form-message" class="message" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Prediction Summary</h2>
+        <p><strong>Predicted next period:</strong> <span id="next-period">General estimate</span></p>
+        <p><strong>Predicted period length:</strong> <span id="avg-period">General estimate</span></p>
+        <p><strong>Average cycle length:</strong> <span id="avg-cycle">General estimate</span></p>
+        <p><strong>Confidence:</strong> <span id="prediction-confidence">Low</span></p>
+        <p><strong>Cycle pattern:</strong> <span id="irregular-warning">Need more data to assess cycle pattern.</span></p>
+        <p><strong>Likely next period window:</strong> <span id="prediction-window">General estimate</span></p>
+        <p><strong>Estimated ovulation:</strong> <span id="ovulation-date">General estimate</span></p>
+        <p><strong>Estimated fertile window:</strong> <span id="fertile-window">General estimate</span></p>
+        <p id="onboarding-message" class="disclaimer"></p>
+        <p class="disclaimer">
+          Predictions are simple estimates based on your history and are <strong>not medical advice</strong>.
+        </p>
+        <p class="disclaimer warning">
+          Fertility and ovulation estimates are approximate and <strong>must not be used as contraception</strong>.
+        </p>
       </section>
 
       <section class="card">
