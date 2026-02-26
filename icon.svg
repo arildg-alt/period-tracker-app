@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Period tracker icon">
+  <rect width="512" height="512" rx="110" fill="#f2849e"/>
+  <circle cx="256" cy="256" r="130" fill="#fff1f6"/>
+  <path d="M256 160c26 43 68 93 68 137 0 38-30 68-68 68s-68-30-68-68c0-44 42-94 68-137z" fill="#d94872"/>
+</svg>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f2849e" />
+    <meta name="description" content="A simple private period tracker that works offline." />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <title>Private Period Tracker</title>
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Private Period Tracker</h1>
+      <p class="subtitle">Stored on this device only</p>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <h2>Add Period Entry</h2>
+        <form id="period-form" novalidate>
+          <label for="start-date">Start date</label>
+          <input id="start-date" name="startDate" type="date" required />
+
+          <label for="end-date">End date</label>
+          <input id="end-date" name="endDate" type="date" required />
+
+          <label for="notes">Notes / symptoms (optional)</label>
+          <textarea
+            id="notes"
+            name="notes"
+            rows="3"
+            placeholder="Example: cramps, fatigue, mood changes"
+          ></textarea>
+
+          <button type="submit" class="primary-btn">Save Entry</button>
+          <p id="form-message" class="message" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Cycle Summary</h2>
+        <p><strong>Average cycle length:</strong> <span id="avg-cycle">Not enough data</span></p>
+        <p><strong>Estimated next period start:</strong> <span id="next-period">Not enough data</span></p>
+        <p class="disclaimer">
+          Predictions are simple estimates based on your history and are <strong>not medical advice</strong>
+          and <strong>not contraception</strong>.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Calendar View</h2>
+        <div class="calendar-controls">
+          <button id="prev-month" class="secondary-btn" type="button" aria-label="Previous month">
+            ◀
+          </button>
+          <h3 id="calendar-title"></h3>
+          <button id="next-month" class="secondary-btn" type="button" aria-label="Next month">▶</button>
+        </div>
+        <div id="calendar-grid" class="calendar-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <h2>Period History</h2>
+        <ul id="history-list" class="history-list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Backup and Data Control</h2>
+        <div class="button-stack">
+          <button id="export-btn" type="button" class="secondary-btn">Export Data (JSON)</button>
+
+          <label for="import-file" class="file-label">Import Data (JSON)</label>
+          <input id="import-file" type="file" accept="application/json" />
+
+          <button id="delete-btn" type="button" class="danger-btn">Delete All Data</button>
+        </div>
+        <p id="data-message" class="message" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
