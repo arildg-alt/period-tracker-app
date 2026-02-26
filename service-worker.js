@@ -1,4 +1,5 @@
-const CACHE_NAME = 'period-tracker-cache-v1';
+const CACHE_NAME = 'period-tracker-cache-v2';
+const CACHE_PREFIX = 'period-tracker-cache-';
 const ASSETS = [
   './',
   './index.html',
@@ -15,7 +16,11 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
+      Promise.all(
+        keys
+          .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      )
     )
   );
 });
