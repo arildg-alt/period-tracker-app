@@ -1,0 +1,17 @@
+{
+  "name": "Private Period Tracker",
+  "short_name": "Tracker",
+  "description": "Simple offline period tracker with local-only data storage.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fff7fa",
+  "theme_color": "#f2849e",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
