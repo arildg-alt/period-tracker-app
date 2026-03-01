@@ -582,8 +582,44 @@ function clearMessage(target) {
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('service-worker.js').catch(() => {
-        // Service worker errors are not fatal for app usage.
+      navigator.serviceWorker
+        .register('service-worker.js')
+        .then((registration) => {
+          registration.update();
+
+          setInterval(() => {
+            registration.update();
+          }, 60 * 60 * 1000);
+
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+
+          registration.addEventListener('updatefound', () => {
+            const installingWorker = registration.installing;
+            if (!installingWorker) {
+              return;
+            }
+
+            installingWorker.addEventListener('statechange', () => {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                installingWorker.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          });
+        })
+        .catch(() => {
+          // Service worker errors are not fatal for app usage.
+        });
+
+      let isRefreshTriggered = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (isRefreshTriggered) {
+          return;
+        }
+
+        isRefreshTriggered = true;
+        window.location.reload();
       });
     });
   }
