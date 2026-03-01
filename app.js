@@ -4,7 +4,7 @@
 const STORAGE_KEY = 'periodTrackerEntriesV1';
 const DEFAULT_CYCLE_LENGTH = 28;
 const DEFAULT_PERIOD_LENGTH = 5;
-const APP_BUILD_VERSION = 'v2';
+const APP_BUILD_VERSION = '2';
 
 const formMessage = document.getElementById('form-message');
 const dataMessage = document.getElementById('data-message');
@@ -144,9 +144,9 @@ cancelRangeBtn.addEventListener('click', () => {
 });
 
 function showBuildVersion() {
-  const buildSubtitle = document.getElementById('build-subtitle');
-  if (buildSubtitle) {
-    buildSubtitle.textContent = `${buildSubtitle.textContent} • Build ${APP_BUILD_VERSION}`;
+  const appVersion = document.getElementById('app-version');
+  if (appVersion) {
+    appVersion.textContent = `v${APP_BUILD_VERSION}`;
   }
 }
 
