@@ -300,6 +300,24 @@ button {
   gap: 0.6rem;
 }
 
+.length-control {
+  margin-top: 0.65rem;
+}
+
+.length-control label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+#period-length-input {
+  width: min(100%, 220px);
+  border: 1px solid #e2c6d0;
+  border-radius: 10px;
+  padding: 0.6rem;
+  background: #fff;
+}
+
 .history-list {
   list-style: none;
   padding: 0;

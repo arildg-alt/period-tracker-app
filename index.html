@@ -30,20 +30,21 @@
 
         <div class="legend">
           <p><span class="swatch swatch-period"></span> Logged period</p>
-          <p><span class="swatch swatch-predicted"></span> Predicted next period</p>
+          <p><span class="swatch swatch-predicted"></span> Predicted periods</p>
           <p><span class="swatch swatch-fertile"></span> Fertile window</p>
           <p><span class="swatch swatch-ovulation"></span> Ovulation day</p>
           <p><span class="swatch swatch-today"></span> Today</p>
         </div>
 
         <div class="quick-entry">
-          <h3>Tap a date to enter or edit period dates</h3>
+          <h3>Tap a date to enter or edit a period start</h3>
           <p id="selected-date-text">No date selected yet.</p>
-          <div class="button-row">
-            <button id="set-start-btn" type="button" class="secondary-btn">Set as period start</button>
-            <button id="set-end-btn" type="button" class="secondary-btn">Set as period end</button>
+          <div class="length-control">
+            <label for="period-length-input">Period length (days)</label>
+            <input id="period-length-input" type="number" min="1" max="14" step="1" value="5" />
           </div>
-          <button id="save-range-btn" type="button" class="primary-btn">Save Period Range</button>
+          <button id="set-start-btn" type="button" class="secondary-btn">Set as period start</button>
+          <button id="save-range-btn" type="button" class="primary-btn">Save Period</button>
           <button id="cancel-range-btn" type="button" class="secondary-btn">Cancel Selection</button>
           <p id="range-preview" class="message"></p>
           <p id="form-message" class="message" aria-live="polite"></p>
@@ -52,7 +53,7 @@
 
       <section class="card">
         <h2>Prediction Summary</h2>
-        <p><strong>Predicted next period:</strong> <span id="next-period">General estimate</span></p>
+        <p><strong>Predicted periods:</strong> <span id="next-period">General estimate</span></p>
         <p><strong>Predicted period length:</strong> <span id="avg-period">General estimate</span></p>
         <p><strong>Average cycle length:</strong> <span id="avg-cycle">General estimate</span></p>
         <p><strong>Confidence:</strong> <span id="prediction-confidence">Low</span></p>
